@@ -27,7 +27,7 @@ if (Meteor.isClient) {
             var miteCount = ($(event.target).find('input[name=miteCount]')).val();
 
             //if not empty then insert
-            if (hiveID.length > 0) {
+            if (hiveID.length > 0 && collectionDate.length > 0 && samplePeriod.length > 0 && miteCount.length > 0) {
 
                 BeeData.insert(
                     {
