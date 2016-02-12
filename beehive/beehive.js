@@ -1,14 +1,43 @@
 BeeData = new Mongo.Collection("beeData");
 
+Router.route('/', function () {
+    this.render('form');
+    this.layout('layout');
+});
+
+Router.route('/admin', function () {
+    this.render('allData');
+    this.layout('layout');
+});
+
+Router.route('/hive/:hiveID', function () {
+        this.render('singleData', {
+            data: function () {
+                return BeeData.findOne({hiveID: this.params.hiveID});
+            }
+        });
+        this.layout('layout');
+    },
+    {
+        name: 'hive.show'
+    });
+
 if (Meteor.isClient) {
 
     //current website subscribes to the beeData collection of the Mongo database
     Meteor.subscribe("beeData");
 
     //a function that orders all the data submitted
-    Template.dataTable.helpers({
+    Template.allData.helpers({
             "beeData": function () {
                 return BeeData.find({}, {sort: {createdOn: -1}}) || {};
+            }
+        }
+    );
+
+    Template.singleData.helpers({
+            "hiveData": function () {
+                return BeeData.find({hiveID: this.hiveID}, {sort: {createdOn: -1}}) || {};
             }
         }
     );
@@ -38,6 +67,9 @@ if (Meteor.isClient) {
                         createdOn: Date.now()
                     }
                 );
+
+                //var route = '/hive/'.concat(hiveID)
+                Router.go('/hive/' + hiveID);
             }
             else {
                 alert("All fields are required.")
