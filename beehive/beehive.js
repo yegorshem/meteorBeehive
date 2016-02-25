@@ -1,15 +1,28 @@
+//mongo database holding each entry from a form
 BeeData = new Mongo.Collection("beeData");
 
+// different routes using package: iron:router
+
+/*
+ main page
+ */
 Router.route('/', function () {
     this.render('form');
     this.layout('layout');
 });
 
+/*
+ place to render all data for admin
+ TODO: make accessible for only admin
+ */
 Router.route('/admin', function () {
     this.render('allData');
     this.layout('layout');
 });
 
+/*
+ after submit, it sends user to a page where only their submitted data is  displayed
+ */
 Router.route('/hive/:hiveID', function () {
         this.render('singleData', {
             data: function () {
@@ -22,6 +35,56 @@ Router.route('/hive/:hiveID', function () {
         name: 'hive.show'
     });
 
+/*
+ Packages used:
+ nicolaslopezj:excel-export
+ check
+
+ This page is responsible for exporting all the data in the beeData database into an excel spreadsheet
+ */
+Router.route('/export', function () {
+    var data = BeeData.find().fetch();
+    var fields = [
+        {
+            key: 'hiveID',
+            title: 'hiveID'
+        },
+        {
+            key: 'collectionDate',
+            title: 'collectionDate'
+        },
+        {
+            key: 'samplePeriod',
+            title: 'samplePeriod'
+        },
+        {
+            key: 'miteCount',
+            title: 'miteCount'
+        },
+        {
+            key: 'createdOn',
+            title: 'createdOn'
+        }
+    ];
+
+    //generating a date for a unique file name
+    var d = new Date();
+    var title = 'BeehiveData ' + d.toDateString();
+
+    //downloading the file
+    var file = Excel.export(title, fields, data);
+    var headers = {
+        'Content-type': 'application/vnd.openxmlformats',
+        'Content-Disposition': 'attachment; filename=' + title + '.xlsx'
+    };
+
+    this.response.writeHead(200, headers);
+    this.response.end(file, 'binary');
+}, {where: 'server'});
+
+/*
+ all the code the user's browser will run
+ */
 if (Meteor.isClient) {
 
     //current website subscribes to the beeData collection of the Mongo database
@@ -81,6 +144,9 @@ if (Meteor.isClient) {
 
 }
 
+/*
+ the code the meteor server will run
+ */
 if (Meteor.isServer) {
 
     Meteor.publish("beeData", function () {
